@@ -5,8 +5,10 @@ set -e
 CRON_SCHEDULE=${CRON_SCHEDULE:-0 0 * * *}
 
 if [[ "$1" == 'no-cron' ]]; then
-    exec /backup.sh
+    shift 1
+    exec /backup.sh "$@"
 else
+if [[ "$1" == 'no-cron' ]]; then
     LOGFIFO='/var/log/cron.fifo'
     if [[ ! -e "$LOGFIFO" ]]; then
         mkfifo "$LOGFIFO"
@@ -19,8 +21,8 @@ else
     CRON_ENV="$CRON_ENV\nMONGO_USERNAME='$MONGO_USERNAME'"
     CRON_ENV="$CRON_ENV\nMONGO_PASSWORD='$MONGO_PASSWORD'"
     CRON_ENV="$CRON_ENV\nMONGO_AUTHENTICATIONDATABASE='$MONGO_AUTHENTICATIONDATABASE'"
-    echo -e "$CRON_ENV\n$CRON_SCHEDULE /backup.sh > $LOGFIFO 2>&1" | crontab -
-    echo "Setup cronjob: $CRON_SCHEDULE /backup.sh > $LOGFIFO 2>&1"
+    echo -e "$CRON_ENV\n$CRON_SCHEDULE /backup.sh \"$@\"> $LOGFIFO 2>&1" | crontab -
+    echo "Setup cronjob: $CRON_SCHEDULE /backup.sh \"$@\" > $LOGFIFO 2>&1"
     cron
     tail -f "$LOGFIFO"
 fi
